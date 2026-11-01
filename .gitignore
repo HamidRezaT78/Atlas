@@ -1,0 +1,26 @@
+# Your own connection profiles (addresses, usernames) and generated documentation: never commit these.
+config/profiles.toml
+config/_backup/
+docs/
+*.docx
+*.drawio
+*_snapshot.json
+*_business_ai.*.json
+
+# Runtime and build output
+logs/
+dist/
+build/
+wheels/
+*.mcpb
+*.lnk
+.venv/
+__pycache__/
+*.py[cod]
+*.toml.tmp
+
+# Editors and OS
+.vscode/
+.idea/
+Thumbs.db
+desktop.ini

@@ -1,0 +1,11 @@
+[project]
+name = "atlas-db-docs"
+version = "3.0.0"
+description = "Read-only Oracle and SQL Server schema metadata tools for allowlisted schemas."
+requires-python = ">=3.11"
+dependencies = [
+    "mcp>=1.30.0,<2",
+    "oracledb>=26.0.1,<27",
+    "keyring>=25.7.0,<26",
+    "pymssql>=2.4.5,<3",
+]

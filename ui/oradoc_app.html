@@ -1,0 +1,533 @@
+<!doctype html>
+<html lang="fa" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>اطلس</title>
+<style>
+  :root {
+    --bg: #f5f6f8; --surface: #ffffff; --surface-2: #f0f2f5; --border: #dde1e7;
+    --text: #1d2330; --muted: #5d6676; --accent: #2457c5; --accent-text: #ffffff;
+    --ok: #1f7a4a; --ok-bg: #e5f4ec; --warn: #8a5a00; --warn-bg: #fdf1d8;
+    --err: #b3261e; --err-bg: #fbe7e6; --focus: #2457c566;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg: #14171c; --surface: #1c2027; --surface-2: #232832; --border: #323946;
+      --text: #e6e9ef; --muted: #9aa3b2; --accent: #6b97f0; --accent-text: #0d1220;
+      --ok: #6fd19c; --ok-bg: #173325; --warn: #f0c063; --warn-bg: #3a2f14;
+      --err: #f28b82; --err-bg: #3d1b19; --focus: #6b97f066;
+    }
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--text); font: 14px/1.7 "Segoe UI", Tahoma, sans-serif; }
+  header { padding: 18px 24px; border-bottom: 1px solid var(--border); background: var(--surface); }
+  header h1 { margin: 0; font-size: 18px; }
+  header p { margin: 2px 0 0; color: var(--muted); font-size: 13px; }
+  .layout { display: grid; grid-template-columns: 260px 1fr; gap: 20px; max-width: 1180px; margin: 20px auto; padding: 0 16px; }
+  @media (max-width: 820px) { .layout { grid-template-columns: 1fr; } }
+  aside h2, .card h2 { font-size: 15px; margin: 0 0 12px; }
+  .plist { display: flex; flex-direction: column; gap: 8px; }
+  .pitem { text-align: right; width: 100%; padding: 10px 12px; border: 1px solid var(--border); border-radius: 8px;
+           background: var(--surface); color: var(--text); cursor: pointer; font: inherit; }
+  .pitem:hover { border-color: var(--accent); }
+  .pitem[aria-current="true"] { border-color: var(--accent); box-shadow: inset -3px 0 0 var(--accent); }
+  .pitem b { display: block; direction: ltr; text-align: right; }
+  .pitem small { color: var(--muted); display: block; }
+  .card { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 18px 20px; margin-bottom: 16px; }
+  .card.disabled { opacity: .55; pointer-events: none; }
+  .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 12px 16px; }
+  label.f { display: flex; flex-direction: column; gap: 4px; font-size: 13px; color: var(--muted); }
+  input[type=text], input[type=password], input[type=number], input[type=search], select {
+    font: inherit; color: var(--text); background: var(--surface-2); border: 1px solid var(--border);
+    border-radius: 6px; padding: 7px 10px; width: 100%; }
+  input:focus, select:focus, button:focus-visible { outline: 3px solid var(--focus); outline-offset: 1px; }
+  .ltr { direction: ltr; text-align: left; }
+  .pw { position: relative; }
+  .pw button { position: absolute; left: 4px; top: 50%; transform: translateY(-50%); }
+  .hint { color: var(--muted); font-size: 12px; }
+  .row { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; margin-top: 14px; }
+  button.btn { font: inherit; border-radius: 6px; padding: 7px 16px; border: 1px solid var(--border);
+               background: var(--surface-2); color: var(--text); cursor: pointer; }
+  button.primary { background: var(--accent); border-color: var(--accent); color: var(--accent-text); }
+  button.link { background: none; border: 0; color: var(--accent); cursor: pointer; font: inherit; padding: 2px 6px; }
+  button:disabled { opacity: .5; cursor: default; }
+  .msg { padding: 8px 12px; border-radius: 6px; margin-top: 12px; font-size: 13px; }
+  .msg.ok { background: var(--ok-bg); color: var(--ok); }
+  .msg.err { background: var(--err-bg); color: var(--err); }
+  .msg.warn { background: var(--warn-bg); color: var(--warn); }
+  .badge { display: inline-block; font-size: 11px; padding: 0 8px; border-radius: 10px; margin-top: 4px; }
+  .badge.ok { background: var(--ok-bg); color: var(--ok); }
+  .badge.err { background: var(--err-bg); color: var(--err); }
+  .owners { max-height: 260px; overflow: auto; border: 1px solid var(--border); border-radius: 6px; margin-top: 8px; }
+  .owners label { display: flex; justify-content: space-between; gap: 8px; padding: 6px 10px; border-bottom: 1px solid var(--border); cursor: pointer; }
+  .owners label:last-child { border-bottom: 0; }
+  .owners span.n { color: var(--muted); font-size: 12px; }
+  .opts { display: flex; flex-wrap: wrap; gap: 6px 18px; }
+  fieldset { border: 0; padding: 0; margin: 0; }
+  legend { font-size: 13px; color: var(--muted); margin-bottom: 4px; }
+  .steps { list-style: none; padding: 0; margin: 12px 0 0; }
+  .steps li { padding: 4px 0; display: flex; gap: 8px; align-items: baseline; }
+  .steps .ic { width: 18px; text-align: center; font-weight: bold; }
+  .s-done .ic { color: var(--ok); } .s-warn .ic { color: var(--warn); } .s-failed .ic { color: var(--err); }
+  .s-pending { color: var(--muted); }
+  .s-running .ic { color: var(--accent); animation: pulse 1s infinite alternate; }
+  @keyframes pulse { from { opacity: .3; } }
+  pre.log { background: var(--surface-2); border-radius: 6px; padding: 10px; max-height: 240px; overflow: auto;
+            direction: ltr; text-align: left; font: 12px/1.5 Consolas, monospace; white-space: pre-wrap; }
+  .outs { margin: 8px 0 0; padding: 0; list-style: none; }
+  .outs li { direction: ltr; text-align: left; font: 12px Consolas, monospace; padding: 2px 0; overflow-wrap: anywhere; }
+  details summary { cursor: pointer; color: var(--muted); font-size: 13px; margin-top: 10px; }
+  fieldset.engine { margin-bottom: 14px; }
+  .seg { display: inline-flex; border: 1px solid var(--border); border-radius: 8px; overflow: hidden; }
+  .seg label { padding: 6px 18px; cursor: pointer; display: flex; gap: 6px; align-items: center; }
+  .seg label:has(input:checked) { background: var(--accent); color: var(--accent-text); }
+  .seg input { accent-color: var(--accent-text); }
+  .tag { font-size: 11px; color: var(--muted); }
+  button.danger { color: var(--err); border-color: var(--err); background: transparent; margin-inline-start: auto; }
+  button.danger.solid { background: var(--err); color: var(--surface); margin-inline-start: 0; }
+  .confirm { margin-top: 12px; padding: 12px 14px; border: 1px solid var(--err); border-radius: 8px; background: var(--err-bg); }
+  .confirm p { margin: 0 0 8px; }
+  fieldset.biz { margin-top: 14px; padding: 12px 14px; border: 1px solid var(--border); border-radius: 8px; }
+  fieldset.biz legend { padding: 0 6px; }
+  .aikey { margin-top: 8px; }
+</style>
+</head>
+<body>
+<header>
+  <h1>اطلس — مستندسازی دیتابیس</h1>
+  <p>اطلاعات دیتابیس Oracle یا SQL Server را وارد کنید، اتصال را تست و ذخیره کنید، سپس مستند و فایل‌های Word و draw.io را بسازید. همه کارها روی همین کامپیوتر و فقط‌خواندنی انجام می‌شود.</p>
+</header>
+
+<div class="layout">
+  <aside>
+    <h2>دیتابیس‌ها</h2>
+    <div class="plist" id="plist"></div>
+    <div class="row"><button class="btn" id="newBtn" type="button">+ دیتابیس جدید</button></div>
+  </aside>
+
+  <main>
+    <section class="card" id="c1">
+      <h2 id="c1title">۱. اطلاعات اتصال</h2>
+      <fieldset class="engine"><legend>نوع دیتابیس</legend>
+        <div class="seg" role="radiogroup">
+          <label><input type="radio" name="engine" value="oracle" checked> Oracle</label>
+          <label><input type="radio" name="engine" value="sqlserver"> SQL Server</label>
+        </div>
+      </fieldset>
+      <div class="grid">
+        <label class="f">آدرس سرور (IP یا نام)
+          <input type="text" id="host" class="ltr" placeholder="db.example.com" autocomplete="off">
+          <span class="hint" id="hostHint" hidden>برای instance نام‌دار: <span class="ltr">SERVER\INSTANCE</span></span></label>
+        <label class="f">پورت
+          <input type="number" id="port" class="ltr" value="1521" min="1" max="65535"></label>
+        <label class="f"><span id="serviceLabel">نام سرویس (Service name)</span>
+          <input type="text" id="service" class="ltr" placeholder="SALES_DB" autocomplete="off" list="dbList">
+          <datalist id="dbList"></datalist>
+          <span class="hint" id="serviceHint"></span></label>
+        <label class="f">نام پروفایل
+          <input type="text" id="name" class="ltr" placeholder="sales_db" autocomplete="off">
+          <span class="hint">نام پوشه خروجی؛ حروف لاتین، عدد، _ و -</span></label>
+        <label class="f">نام کاربری
+          <input type="text" id="username" class="ltr" placeholder="atlas_reader" autocomplete="off"></label>
+        <label class="f">رمز عبور
+          <span class="pw"><input type="password" id="password" class="ltr" autocomplete="new-password">
+          <button class="link" type="button" id="pwToggle" aria-label="نمایش رمز">نمایش</button></span>
+          <span class="hint" id="pwHint">فقط در Windows Credential Manager ذخیره می‌شود.</span></label>
+      </div>
+      <div class="row">
+        <button class="btn primary" id="testBtn" type="button">تست اتصال</button>
+        <span class="hint">تست اتصال چیزی ذخیره نمی‌کند.</span>
+        <button class="btn danger" id="delBtn" type="button" hidden>حذف این دیتابیس</button>
+      </div>
+      <div class="confirm" id="delConfirm" hidden>
+        <p id="delText"></p>
+        <label><input type="checkbox" id="delPw" checked> رمز ذخیره‌شده هم از Windows Credential Manager پاک شود</label>
+        <div class="row">
+          <button class="btn danger solid" id="delYes" type="button">بله، حذف شود</button>
+          <button class="btn" id="delNo" type="button">انصراف</button>
+        </div>
+      </div>
+      <div id="c1msg"></div>
+    </section>
+
+    <section class="card" id="c2">
+      <h2>۲. schemaهای مجاز</h2>
+      <p class="hint" id="c2hint">بعد از تست اتصال، schemaهایی که این کاربر می‌بیند اینجا نمایش داده می‌شوند. فقط schemaهای انتخاب‌شده قابل مستندسازی هستند.</p>
+      <input type="search" id="ownerFilter" class="ltr" placeholder="جست‌وجو…" hidden>
+      <div class="owners" id="owners" hidden></div>
+      <div class="row">
+        <input type="text" id="manualSchema" class="ltr" placeholder="SCHEMA_NAME" style="max-width:200px">
+        <button class="btn" type="button" id="addSchema">افزودن دستی</button>
+      </div>
+      <div class="row">
+        <button class="btn primary" id="saveBtn" type="button">ذخیره پروفایل و رمز</button>
+      </div>
+      <div id="c2msg"></div>
+    </section>
+
+    <section class="card disabled" id="c3">
+      <h2>۳. تولید مستند</h2>
+      <div class="grid">
+        <label class="f">schema
+          <select id="runSchema" class="ltr"></select></label>
+        <fieldset><legend>زبان</legend><div class="opts">
+          <label><input type="checkbox" name="lang" value="fa" checked> فارسی</label>
+          <label><input type="checkbox" name="lang" value="en"> انگلیسی</label></div></fieldset>
+        <fieldset><legend>نسخه</legend><div class="opts">
+          <label><input type="checkbox" name="aud" value="technical" checked> فنی</label>
+          <label><input type="checkbox" name="aud" value="client" checked> کارفرما</label></div></fieldset>
+        <fieldset><legend>سطح جزئیات</legend><div class="opts">
+          <label><input type="radio" name="detail" value="summary"> خلاصه</label>
+          <label><input type="radio" name="detail" value="standard"> استاندارد</label>
+          <label><input type="radio" name="detail" value="full" checked> کامل</label></div></fieldset>
+      </div>
+      <div class="row">
+        <label><input type="checkbox" id="publish" checked> ساخت فایل‌های Word (فنی و کارفرما) و draw.io</label>
+        <label class="f" style="flex-direction:row;align-items:center;gap:8px">نام فایل تحویلی
+          <input type="text" id="deliverable" class="ltr" style="width:180px"></label>
+      </div>
+      <fieldset class="biz">
+        <legend>تحلیل بیزنسی</legend>
+        <div class="opts">
+          <label><input type="checkbox" id="business" checked> تحلیل بیزنسی (مستند جداگانه؛ در Word با پسوند _business)</label>
+          <label><input type="checkbox" id="businessAi" disabled> غنی‌سازی با Claude (هوش مصنوعی)</label>
+        </div>
+        <div class="row aikey">
+          <span class="badge" id="aiStatus">…</span>
+          <input type="password" id="aiKey" class="ltr" placeholder="sk-ant-…" autocomplete="off" style="max-width:260px" aria-label="کلید Claude API">
+          <button class="btn" type="button" id="aiSave">ذخیره کلید</button>
+          <button class="btn" type="button" id="aiDel" hidden>حذف کلید</button>
+        </div>
+        <p class="hint">تحلیل بیزنسی بدون هوش مصنوعی هم کامل ساخته می‌شود (با قواعد، کاملاً آفلاین). با «غنی‌سازی با Claude» فقط <b>ساختار</b> — نام جدول‌ها و ستون‌ها، نوع داده، کلیدها و توضیحات ثبت‌شده — به Anthropic ارسال می‌شود، نه داده‌ها. هزینه تقریبی ۱ تا ۳ سنت به ازای هر جدول (مدل Claude Opus 5.5) است و مقدار واقعی در گزارش کار نمایش داده می‌شود. کلید فقط در Windows Credential Manager ذخیره می‌شود.</p>
+        <div id="aiMsg"></div>
+      </fieldset>
+      <p class="hint">ساخت Word به Microsoft Word و Chrome یا Edge روی همین کامپیوتر نیاز دارد. اگر فایل‌های امروز از قبل وجود داشته باشند، بازنویسی نمی‌شوند و انتشار متوقف می‌شود.</p>
+      <div class="row"><button class="btn primary" id="runBtn" type="button">شروع</button></div>
+      <div id="c3msg"></div>
+      <div id="job" hidden>
+        <ul class="steps" id="steps"></ul>
+        <div id="jobMsg"></div>
+        <div id="outBox" hidden>
+          <div class="row" id="folderBtns"></div>
+          <details><summary>فایل‌های ساخته‌شده</summary><ul class="outs" id="outs"></ul></details>
+        </div>
+        <details id="logBox"><summary>گزارش کامل</summary><pre class="log" id="log"></pre></details>
+      </div>
+    </section>
+  </main>
+</div>
+
+<script>
+(function () {
+  "use strict";
+  var TOKEN = "__ORADOC_TOKEN__";
+  var $ = function (id) { return document.getElementById(id); };
+  var state = { profiles: [], selected: null, schemas: [], owners: null, polling: null };
+
+  function api(method, path, body) {
+    var opt = { method: method, headers: { "X-Oradoc-Token": TOKEN } };
+    if (body) { opt.headers["Content-Type"] = "application/json"; opt.body = JSON.stringify(body); }
+    return fetch(path, opt).then(function (r) {
+      return r.json().catch(function () { return {}; }).then(function (d) {
+        if (!r.ok) throw new Error(d.error || ("خطای " + r.status));
+        return d;
+      });
+    }, function () { throw new Error("برنامه محلی در دسترس نیست؛ آن را دوباره با Atlas.cmd یا میانبر Atlas باز کنید."); });
+  }
+  function msg(box, kind, text) {
+    var el = $(box); el.textContent = "";
+    if (!text) return;
+    var d = document.createElement("div"); d.className = "msg " + kind; d.textContent = text; el.appendChild(d);
+  }
+  function busy(btn, on, label) {
+    btn.disabled = on;
+    if (on) { btn.dataset.label = btn.textContent; btn.textContent = label; }
+    else if (btn.dataset.label) btn.textContent = btn.dataset.label;
+  }
+  function engine() { return (document.querySelector("input[name=engine]:checked") || {}).value || "oracle"; }
+  var ENGINE_UI = {
+    oracle: { label: "نام سرویس (Service name)", ph: "SALES_DB", port: 1521, user: "atlas_reader", host: "db.example.com" },
+    sqlserver: { label: "نام دیتابیس (Database)", ph: "خالی بگذارید و تست کنید تا فهرست دیتابیس‌ها بیاید", port: 1433, user: "atlas_reader", host: "10.0.0.20" }
+  };
+  function applyEngine(resetPort) {
+    var e = engine(), ui = ENGINE_UI[e], other = ENGINE_UI[e === "oracle" ? "sqlserver" : "oracle"];
+    $("serviceLabel").textContent = ui.label;
+    $("service").placeholder = ui.ph;
+    $("username").placeholder = ui.user;
+    $("host").placeholder = ui.host;
+    $("hostHint").hidden = e !== "sqlserver";
+    if (resetPort || Number($("port").value) === other.port || !$("port").value) $("port").value = ui.port;
+    if (e !== "sqlserver") { $("dbList").textContent = ""; $("serviceHint").textContent = ""; }
+  }
+  Array.prototype.forEach.call(document.querySelectorAll("input[name=engine]"), function (r) {
+    r.addEventListener("change", function () { state.owners = null; applyEngine(false); renderOwners(); msg("c1msg"); });
+  });
+  function conn() {
+    return { engine: engine(), name: $("name").value.trim(), host: $("host").value.trim(), port: Number($("port").value),
+             service: $("service").value.trim(), username: $("username").value.trim(), password: $("password").value };
+  }
+  function msgs(box, items) {
+    var el = $(box); el.textContent = "";
+    items.forEach(function (m) {
+      var d = document.createElement("div"); d.className = "msg " + m[0]; d.textContent = m[1]; el.appendChild(d);
+    });
+  }
+
+  // ---------- profiles ----------
+  function loadProfiles(select) {
+    return api("GET", "/api/profiles").then(function (d) {
+      state.profiles = d.profiles;
+      renderProfiles();
+      var want = select || state.selected;
+      var p = state.profiles.filter(function (x) { return x.name === want; })[0];
+      if (p) pick(p); else if (!state.selected && state.profiles.length) pick(state.profiles[0]); else if (!p) newProfile();
+    }).catch(function (e) { msg("c1msg", "err", e.message); });
+  }
+  function renderProfiles() {
+    var box = $("plist"); box.textContent = "";
+    if (!state.profiles.length) {
+      var e = document.createElement("p"); e.className = "hint"; e.textContent = "هنوز دیتابیسی ثبت نشده است."; box.appendChild(e);
+    }
+    state.profiles.forEach(function (p) {
+      var b = document.createElement("button"); b.type = "button"; b.className = "pitem";
+      b.setAttribute("aria-current", String(state.selected === p.name));
+      var t = document.createElement("b"); t.textContent = p.name;
+      var s = document.createElement("small"); s.className = "ltr"; s.style.textAlign = "right";
+      s.textContent = (p.engine === "sqlserver" ? "SQL Server" : "Oracle") + " · " + p.service + " · " + p.schemas.length + " schema";
+      var g = document.createElement("span"); g.className = "badge " + (p.has_password ? "ok" : "err");
+      g.textContent = p.has_password ? "رمز ذخیره شده" : "رمز ذخیره نشده";
+      b.append(t, s, g);
+      b.addEventListener("click", function () { pick(p); });
+      box.appendChild(b);
+    });
+  }
+  function pick(p) {
+    state.selected = p.name; state.owners = null; state.schemas = p.schemas.slice();
+    document.querySelector("input[name=engine][value=" + (p.engine || "oracle") + "]").checked = true;
+    applyEngine(false);
+    $("name").value = p.name; $("host").value = p.host; $("port").value = p.port || 1521;
+    $("service").value = p.service; $("username").value = p.username; $("password").value = "";
+    $("password").placeholder = p.has_password ? "••••••  (برای تغییر، رمز جدید را وارد کنید)" : "";
+    $("pwHint").textContent = p.has_password ? "رمز در Windows Credential Manager ذخیره است." : "فقط در Windows Credential Manager ذخیره می‌شود.";
+    $("c1title").textContent = "۱. اطلاعات اتصال — " + p.name;
+    $("deliverable").value = deliverableFrom(p.service);
+    $("delBtn").hidden = false; $("delConfirm").hidden = true;
+    ["c1msg", "c2msg", "c3msg"].forEach(function (b) { msg(b); });
+    renderProfiles(); renderOwners(); renderRunSchemas(p);
+  }
+  function newProfile() {
+    state.selected = null; state.owners = null; state.schemas = [];
+    ["name", "host", "service", "username", "password"].forEach(function (id) { $(id).value = ""; });
+    applyEngine(true); $("password").placeholder = "";
+    $("dbList").textContent = ""; $("serviceHint").textContent = "";
+    $("pwHint").textContent = "فقط در Windows Credential Manager ذخیره می‌شود.";
+    $("c1title").textContent = "۱. اطلاعات اتصال — دیتابیس جدید";
+    $("delBtn").hidden = true; $("delConfirm").hidden = true;
+    ["c1msg", "c2msg", "c3msg"].forEach(function (b) { msg(b); });
+    renderProfiles(); renderOwners(); renderRunSchemas(null);
+    $("host").focus();
+  }
+  function deliverableFrom(service) { return (service || "").toUpperCase().replace(/[^A-Z0-9_\-]/g, "_"); }
+
+  $("service").addEventListener("input", function () {
+    if (!state.selected) {
+      var s = $("service").value.trim();
+      $("name").value = s.toLowerCase().replace(/[^a-z0-9_\-]/g, "_").slice(0, 64);
+      $("deliverable").value = deliverableFrom(s);
+    }
+  });
+  $("newBtn").addEventListener("click", newProfile);
+
+  // ---------- delete ----------
+  $("delBtn").addEventListener("click", function () {
+    $("delText").textContent = "پروفایل «" + state.selected + "» از فهرست دیتابیس‌ها و از config\\profiles.toml حذف می‌شود. " +
+      "مستندهای ساخته‌شده در پوشه docs باقی می‌مانند و نسخه قبلی فایل پروفایل‌ها در config\\_backup ذخیره می‌شود.";
+    $("delPw").checked = true;
+    $("delConfirm").hidden = false;
+    $("delNo").focus();
+  });
+  $("delNo").addEventListener("click", function () { $("delConfirm").hidden = true; });
+  $("delYes").addEventListener("click", function () {
+    var btn = this, name = state.selected;
+    busy(btn, true, "در حال حذف…");
+    api("POST", "/api/delete", { name: name, delete_password: $("delPw").checked }).then(function (d) {
+      state.selected = null;
+      var note = d.password_deleted ? " و رمز آن از Windows Credential Manager پاک شد."
+        : d.password_shared ? "؛ رمز نگه داشته شد چون پروفایل دیگری از همان رمز استفاده می‌کند." : ".";
+      return loadProfiles().then(function () { msg("c1msg", "ok", "پروفایل «" + d.name + "» حذف شد" + note); });
+    }).catch(function (e) { msg("c1msg", "err", e.message); })
+      .then(function () { busy(btn, false); });
+  });
+  $("pwToggle").addEventListener("click", function () {
+    var i = $("password"), show = i.type === "password";
+    i.type = show ? "text" : "password"; this.textContent = show ? "پنهان" : "نمایش";
+  });
+
+  // ---------- schemas ----------
+  function renderOwners() {
+    var box = $("owners"); box.textContent = "";
+    var list = state.owners ? state.owners.slice() : [];
+    state.schemas.forEach(function (s) {
+      if (!list.some(function (o) { return o.owner === s; })) list.unshift({ owner: s, tables: null });
+    });
+    var f = $("ownerFilter").value.trim().toUpperCase();
+    box.hidden = !list.length; $("ownerFilter").hidden = !state.owners || state.owners.length < 8;
+    list.forEach(function (o) {
+      if (f && o.owner.toUpperCase().indexOf(f) < 0 && state.schemas.indexOf(o.owner) < 0) return;
+      var l = document.createElement("label");
+      var left = document.createElement("span");
+      var cb = document.createElement("input"); cb.type = "checkbox"; cb.value = o.owner;
+      cb.checked = state.schemas.indexOf(o.owner) >= 0;
+      cb.addEventListener("change", function () {
+        if (cb.checked) { if (state.schemas.indexOf(o.owner) < 0) state.schemas.push(o.owner); }
+        else state.schemas = state.schemas.filter(function (s) { return s !== o.owner; });
+      });
+      var nm = document.createElement("span"); nm.className = "ltr"; nm.textContent = " " + o.owner;
+      left.append(cb, nm);
+      var n = document.createElement("span"); n.className = "n";
+      n.textContent = o.tables == null ? "" : o.tables + " جدول";
+      l.append(left, n); box.appendChild(l);
+    });
+  }
+  $("ownerFilter").addEventListener("input", renderOwners);
+  $("addSchema").addEventListener("click", function () {
+    var s = $("manualSchema").value.trim();
+    if (engine() === "oracle") s = s.toUpperCase();
+    var ok = engine() === "oracle" ? /^[A-Z][A-Z0-9_$#]{0,127}$/.test(s) : /^[\w@#$][\w@#$ .\-]{0,127}$/u.test(s);
+    if (!ok) { msg("c2msg", "err", "نام schema معتبر نیست."); return; }
+    if (state.schemas.indexOf(s) < 0) state.schemas.push(s);
+    $("manualSchema").value = ""; msg("c2msg"); renderOwners();
+  });
+
+  $("testBtn").addEventListener("click", function () {
+    var btn = this; busy(btn, true, "در حال اتصال…"); msg("c1msg");
+    api("POST", "/api/test", conn()).then(function (d) {
+      var items = [], noDb = d.engine === "sqlserver" && !$("service").value.trim();
+      state.owners = noDb ? null : d.owners;
+      if (d.engine === "sqlserver") {
+        var dl = $("dbList"); dl.textContent = "";
+        d.databases.forEach(function (n) { var o = document.createElement("option"); o.value = n; dl.appendChild(o); });
+        $("serviceHint").textContent = d.databases.length + " دیتابیس قابل دسترس؛ بعد از انتخاب یا تغییر دیتابیس دوباره تست کنید.";
+      }
+      if (noDb) {
+        items.push(["ok", "اتصال برقرار شد. " + d.version + " — حالا دیتابیس را از فهرست «نام دیتابیس» انتخاب و دوباره «تست اتصال» را بزنید."]);
+      } else {
+        items.push(["ok", "اتصال برقرار شد. " + d.version + (d.database ? " — دیتابیس " + d.database : "") +
+                          " — " + d.owners.length + " schema قابل مشاهده."]);
+        $("c2hint").textContent = "schemaهایی را که می‌خواهید مستند شوند انتخاب کنید.";
+      }
+      (d.warnings || []).forEach(function (w) { items.push(["warn", w]); });
+      msgs("c1msg", items);
+      renderOwners();
+    }).catch(function (e) { msg("c1msg", "err", e.message); })
+      .then(function () { busy(btn, false); });
+  });
+
+  $("saveBtn").addEventListener("click", function () {
+    var btn = this, body = conn();
+    body.schemas = state.schemas.slice();
+    body.replace = state.selected === body.name;
+    if (!body.schemas.length) { msg("c2msg", "err", "حداقل یک schema را انتخاب کنید."); return; }
+    busy(btn, true, "در حال ذخیره…"); msg("c2msg");
+    api("POST", "/api/save", body).then(function (d) {
+      $("password").value = "";
+      msg("c2msg", "ok", "پروفایل «" + d.name + "» ذخیره شد" + (d.password_saved ? " و رمز در Windows Credential Manager قرار گرفت." : "."));
+      return loadProfiles(d.name);
+    }).catch(function (e) { msg("c2msg", "err", e.message); })
+      .then(function () { busy(btn, false); });
+  });
+
+  // ---------- run ----------
+  function renderRunSchemas(p) {
+    var sel = $("runSchema"); sel.textContent = "";
+    $("c3").classList.toggle("disabled", !p);
+    if (!p) return;
+    p.schemas.forEach(function (s) { sel.add(new Option(s, s, false, s === p.default_schema)); });
+  }
+  function checked(name) {
+    return Array.prototype.map.call(document.querySelectorAll("input[name=" + name + "]:checked"), function (i) { return i.value; });
+  }
+  $("runBtn").addEventListener("click", function () {
+    var btn = this;
+    var body = { profile: state.selected, schema: $("runSchema").value, langs: checked("lang"),
+                 audiences: checked("aud"), detail: checked("detail")[0], publish: $("publish").checked,
+                 service: $("deliverable").value.trim(), business: $("business").checked,
+                 business_ai: $("business").checked && $("businessAi").checked && !$("businessAi").disabled };
+    busy(btn, true, "در حال شروع…"); msg("c3msg");
+    api("POST", "/api/run", body).then(function (d) { renderJob(d); poll(); })
+      .catch(function (e) { msg("c3msg", "err", e.message); busy(btn, false); });
+  });
+
+  var ICON = { pending: "○", running: "●", done: "✓", warn: "!", failed: "✕" };
+  function renderJob(job) {
+    if (!job) return;
+    $("job").hidden = false;
+    var ul = $("steps"); ul.textContent = "";
+    job.steps.forEach(function (s) {
+      var li = document.createElement("li"); li.className = "s-" + s.status;
+      var ic = document.createElement("span"); ic.className = "ic"; ic.textContent = ICON[s.status] || "○";
+      var t = document.createElement("span"); t.textContent = s.label + (s.note ? " — " + s.note : "");
+      li.append(ic, t); ul.appendChild(li);
+    });
+    var log = $("log"), atEnd = log.scrollTop + log.clientHeight >= log.scrollHeight - 4;
+    log.textContent = job.log.join("\n");
+    if (atEnd) log.scrollTop = log.scrollHeight;
+    var running = job.state === "running";
+    $("runBtn").disabled = running;
+    if (!running && $("runBtn").dataset.label) $("runBtn").textContent = $("runBtn").dataset.label;
+    if (job.state === "failed") { msg("jobMsg", "err", job.error || "عملیات ناموفق بود."); $("logBox").open = true; }
+    else if (job.state === "done") msg("jobMsg", job.warnings.length ? "warn" : "ok",
+      job.warnings.length ? "تمام شد، با هشدار: " + job.warnings.join(" ") : "همه مراحل با موفقیت انجام شد.");
+    else msg("jobMsg", "", "");
+    var outs = $("outs"); outs.textContent = "";
+    job.outputs.forEach(function (o) { var li = document.createElement("li"); li.textContent = o; outs.appendChild(li); });
+    var fb = $("folderBtns"); fb.textContent = "";
+    job.folders.forEach(function (f, i) {
+      var b = document.createElement("button"); b.type = "button"; b.className = "btn" + (i === 0 ? " primary" : "");
+      b.textContent = i === 0 && job.folders.length > 1 ? "باز کردن پوشه Word و draw.io" : (i === 0 ? "باز کردن پوشه خروجی" : "باز کردن پوشه مستندهای Markdown");
+      b.addEventListener("click", function () { api("POST", "/api/open", { path: f }).catch(function (e) { msg("jobMsg", "err", e.message); }); });
+      fb.appendChild(b);
+    });
+    $("outBox").hidden = !job.outputs.length || running;
+  }
+  function poll() {
+    clearTimeout(state.polling);
+    api("GET", "/api/job").then(function (d) {
+      renderJob(d.job);
+      if (d.job && d.job.state === "running") state.polling = setTimeout(poll, 1500);
+    }).catch(function () { state.polling = setTimeout(poll, 4000); });
+  }
+
+  // ---------- Claude API key (business analysis enrichment) ----------
+  function renderAi(d) {
+    var st = $("aiStatus");
+    st.className = "badge " + (d.has_key ? "ok" : "err");
+    st.textContent = d.has_key ? "کلید Claude ذخیره شده (" + d.model + ")" : "کلید Claude ذخیره نشده";
+    $("aiDel").hidden = !d.has_key;
+    $("businessAi").disabled = !d.has_key || !$("business").checked;
+    if (!d.has_key) $("businessAi").checked = false;
+  }
+  function loadAi() { return api("GET", "/api/ai").then(renderAi).catch(function (e) { msg("aiMsg", "err", e.message); }); }
+  $("business").addEventListener("change", loadAi);
+  $("aiSave").addEventListener("click", function () {
+    var btn = this, key = $("aiKey").value.trim();
+    if (!key) { msg("aiMsg", "err", "کلید را وارد کنید."); return; }
+    busy(btn, true, "در حال بررسی کلید…"); msg("aiMsg");
+    api("POST", "/api/ai/save", { key: key }).then(function (d) {
+      $("aiKey").value = ""; renderAi(d); $("businessAi").checked = true;
+      msg("aiMsg", "ok", "کلید معتبر بود و در Windows Credential Manager ذخیره شد.");
+    }).catch(function (e) { msg("aiMsg", "err", e.message); }).then(function () { busy(btn, false); });
+  });
+  $("aiDel").addEventListener("click", function () {
+    api("POST", "/api/ai/delete", {}).then(function (d) { renderAi(d); msg("aiMsg", "ok", "کلید حذف شد."); })
+      .catch(function (e) { msg("aiMsg", "err", e.message); });
+  });
+  loadAi();
+
+  setInterval(function () { api("POST", "/api/ping", {}).catch(function () {}); }, 60000);
+  loadProfiles().then(poll);
+})();
+</script>
+</body>
+</html>

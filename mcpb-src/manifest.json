@@ -1,0 +1,73 @@
+{
+  "manifest_version": "0.4",
+  "name": "atlas-db-docs",
+  "display_name": "Atlas Database Documentation",
+  "version": "3.0.0",
+  "description": "Read-only Oracle and SQL Server schema metadata tools for allowlisted schemas.",
+  "author": {
+    "name": "Atlas"
+  },
+  "server": {
+    "type": "uv",
+    "entry_point": "server/oracle_mcp.py",
+    "mcp_config": {
+      "command": "uv",
+      "args": [
+        "run",
+        "--directory",
+        "${__dirname}",
+        "server/oracle_mcp.py"
+      ],
+      "env": {
+        "ORADOC_CONFIG": "${user_config.profiles_file}"
+      }
+    }
+  },
+  "user_config": {
+    "profiles_file": {
+      "type": "file",
+      "title": "Profiles file (profiles.toml)",
+      "description": "Choose config\\profiles.toml of your Atlas folder to reach your databases. If left empty, only the packaged sample profile (db.example.com) is available.",
+      "required": false,
+      "default": ""
+    }
+  },
+  "tools": [
+    {
+      "name": "list_tables",
+      "description": "List tables in an allowlisted schema."
+    },
+    {
+      "name": "describe_table",
+      "description": "Column names, types, sizes and nullability."
+    },
+    {
+      "name": "list_constraints",
+      "description": "Primary, foreign, unique and check constraints."
+    },
+    {
+      "name": "list_indexes",
+      "description": "Index definitions and indexed columns."
+    },
+    {
+      "name": "list_relationships",
+      "description": "Foreign-key relationships within the schema."
+    },
+    {
+      "name": "get_comments",
+      "description": "Table and column comments."
+    },
+    {
+      "name": "get_column_defaults",
+      "description": "Column default expressions and virtual/hidden/identity flags."
+    },
+    {
+      "name": "get_check_constraints",
+      "description": "CHECK constraint conditions."
+    },
+    {
+      "name": "get_index_expressions",
+      "description": "Function-based index expressions (Oracle)."
+    }
+  ]
+}

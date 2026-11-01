@@ -1,0 +1,25 @@
+# Sample connection profiles for Atlas. Your real profiles live in config/profiles.toml, which the
+# local app creates when you save a database and which git ignores.
+#
+# Passwords are NEVER stored here: each profile names a Windows Credential Manager entry
+# (keyring_service + username). allowed_schemas is the allowlist; nothing else can be read.
+
+default_profile = "sales_db"
+
+[profiles.sales_db]
+dsn = "db.example.com:1521/SALES_DB"
+username = "atlas_reader"
+keyring_service = "Oradoc_sales_db"
+allowed_schemas = ["APP_OWNER"]
+default_schema = "APP_OWNER"
+call_timeout_ms = 10000
+
+# SQL Server: dsn is host[\\instance]:port/database
+# [profiles.crm]
+# engine = "sqlserver"
+# dsn = "sql.example.com:1433/CRM"
+# username = "atlas_reader"
+# keyring_service = "Oradoc_crm"
+# allowed_schemas = ["dbo"]
+# default_schema = "dbo"
+# call_timeout_ms = 30000
